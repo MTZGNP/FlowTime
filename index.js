@@ -1,7 +1,7 @@
 
 // constants
 const SPEED = 1;
-const REFRESH_RATE = 100;
+const REFRESH_RATE = 500;
 const FOCUS_COLOUR = "#F26157"
 const REST_COLOUR = "#64B6AC"
 const NEUTRAL_COLOUR = "#FFD400"
