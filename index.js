@@ -1,7 +1,6 @@
-
 // constants
 const SPEED = 1;
-const REFRESH_RATE = 500;
+const REFRESH_RATE = 100;
 const FOCUS_COLOUR = "#F26157"
 const REST_COLOUR = "#64B6AC"
 const NEUTRAL_COLOUR = "#FFD400"
@@ -12,6 +11,18 @@ const BG_COLOURS = {
 }
 const RING_SOUND = "bell.wav";
 const BUTTON_SOUND = "click.mp3";
+const s = {
+	RING: "bell.wav",
+	BUTTON: "click.mp3"
+}
+$(document).ready(() => {
+	loadSettings();
+	updateSettings();
+	loadTasks();
+	updateTaskList();
+})
+
+
 
 var $bigButton = $("#stopWatchButton");
 var $timeDisplay = $("#time");
@@ -21,17 +32,16 @@ var stopWatch; //stores current StopWatch object
 var countDown; //stores current countdown object
 var rest; //stores deserved rest status object
 
-function calculateRestTime(focusTime,ruleSet) {
-	//returns the # of milliseconds user should rest for based on specified ruleset
-	//(e.g) 5to1 is 5 minutes of focus for 1 minute of rest
-	if (ruleSet == "5to1"){
-		var restTime = Math.floor(focusTime/5/60/1000)*60*1000;
-		return {
-			restTime: restTime,
-			deserving: restTime != 0,
-			reason: restTime == 0 ? "You need to focus for at least 5 minutes" : "",
-		}
+function calculateRestTime(focusTime) {
+	//returns the # of milliseconds user should rest for based on specified method
+	//(e.g) method = ratio -> restTime = focusTime / workToRestratio
+	var restTime;
+	console.log("calculating rest time for focus time: " + focusTime);	
+	if (settings.restCalculationMethod.method == "ratio") {
+		periods = Math.floor(focusTime/ 60 / 1000 /settings.restCalculationMethod.minutesOfWork)
+		restTime = periods * 60 * 1000 * settings.restCalculationMethod.minutesOfRest;
 	}
+	return {deserving: restTime > 0, restTime: restTime};
 }
 function formatTime(sw) {
 	//return time formatted as "(m?)mm:ss"
@@ -41,12 +51,12 @@ function formatTime(sw) {
 }
 //update display with current time
 function displayTime(that) {
-	
+
 	$timeDisplay.text(formatTime(that));
 }
-function updateTitle(that){
+function updateTitle(that) {
 	console.log("current state: " + state);
-	switch (state){
+	switch (state) {
 		case "focus":
 			document.title = formatTime(that) + " - Focusing";
 			break;
@@ -62,15 +72,18 @@ function updateTitle(that){
 
 //change state and update theme accordingly
 function changeState(newState) {
-	if (newState == "neutral"){
+	if (newState == "neutral") {
 		if (stopWatch != null) {
-			stopWatch.stop();}
+			stopWatch.stop();
+		}
 		if (countDown != null) {
-			countDown.stop();}
+			countDown.stop();
+		}
 	}
 	state = newState;
-	$timeDisplay.text ("00:00");
+	
 	document.body.style.backgroundColor = BG_COLOURS[state];
+	$timeDisplay.text("00:00");
 }
 
 //dropdown style notifications 
@@ -84,67 +97,88 @@ function notify(message) {
 	}, 2000);
 };
 
-function playsound(sound){
+function playSound(sound) {
 	var audio = new Audio(sound);
 	audio.play();
 }
 
 
+function startFocus() {
+	changeState("focus");
+	$bigButton.text("Rest");
+	stopWatch = new StopWatch(SPEED, REFRESH_RATE,
+		(that) => {
+			displayTime(that);
+			updateTitle(that);
+			rest = calculateRestTime(that.getTotalMilliseconds());
+			$bigButton.text("Rest " + (rest.deserving ? "(" + (rest.restTime / 60 / 1000) + " min)" : ""));
+			if (settings.autostartRest && that.getTotalMilliseconds() > settings.autostartRestAfter) {
+				playSound(s.RING);
+				changeState("rest");
+				startRest();
+			}
+			
+		})
+	stopWatch.start()
+}
 
+function startRest() {
+	changeState("rest");
+	$bigButton.text("Skip");
+	stopWatch.stop();
+	countDown = new CountDown(rest.restTime, 1, REFRESH_RATE,
+		(that) => { //onUpdate
+			displayTime(that);
+			updateTitle(that);
+		},
+		() => { //OnFinish
+			playSound(s.RING);
+			if (settings.autostartFocus) {
+				changeState("focus");
+				startFocus();
+			} else {
+				changeState("neutral");
+				$bigButton.text("Start");
+			}
+
+		})
+	countDown.start();
+}
+function startNeutral() {
+	changeState("neutral");
+	$bigButton.text("Start");
+	countDown.stop()
+	updateTitle();
+
+}
 
 $bigButton.click(function () {
 	console.log("stopwatch button clicked");
-	playsound(BUTTON_SOUND);
+	playSound(s.BUTTON);
 	switch (state) {
 		case "neutral":
-			changeState("focus");
-			$bigButton.text("Rest");
-			stopWatch = new StopWatch(SPEED, REFRESH_RATE, 
-				(that) => {
-					displayTime(that);
-					updateTitle(that);
-					rest = calculateRestTime(that.getTotalMilliseconds(), "5to1");
-					$bigButton.text("Rest " + (rest.deserving ? "(" + (rest.restTime/60/1000) + " min)" : ""));})
-			stopWatch.start()
+			startFocus()
 			break
 		case "focus":
-			
 			if (!rest.deserving) {
-				notify(rest.reason);
+				notify("You have to work for at least " + (settings.restCalculationMethod.minutesOfWork) + " minutes");
 				break;
 			}
-			changeState("rest");
-			$bigButton.text("Skip");
-			stopWatch.stop();
-			countDown = new CountDown(rest.restTime,1,REFRESH_RATE,
-				(that) =>{ //onUpdate
-					displayTime(that);
-					updateTitle(that);
-				},
-				() => { //OnFinish
-					changeState("neutral");
-					$bigButton.text("Start");
-					playsound(RING_SOUND);
-				} )
-			countDown.start();
+			startRest();
 			break;
+
 		case "rest":
-			changeState("neutral");
-			$bigButton.text("Start");
-			countDown.stop()	
-			updateTitle();
+			startNeutral();
 			break;
 	}
 })
-
-$closeButton.click(()=>
-{	
-	if (state == "neutral" ){
+$closeButton.click(() => {
+	if (state == "neutral") {
 		notify("already stopped");
 		return;
 	}
-	
-	if(state == "focus" && rest.deserving && !confirm("discard session?")){
+
+	if (state == "focus" && rest.deserving && !confirm("discard session?")) {
 		return;
 	}
 	$bigButton.text("Start");
@@ -159,14 +193,13 @@ var $taskList = $("#taskList")
 var tasks = [];
 var selectedTask = 0;
 
-loadLocalStorage();
-updateTaskList();
 
-$taskEntryForm.submit((that)=>{
+
+$taskEntryForm.submit((that) => {
 	console.log("task submitted");
 	that.preventDefault();
 	var task = $taskEntryBox.val().trim();
-	if (task == ""){
+	if (task == "") {
 		notify("Task cannot be empty");
 		return;
 	}
@@ -174,32 +207,32 @@ $taskEntryForm.submit((that)=>{
 	updateTaskList();
 	$taskEntryBox.val("");
 })
-function addTask(task){
+function addTask(task) {
 	tasks.push(task);
-	updateLocalStorage();
+	saveTasks();
 }
-function updateTaskList(){
+function updateTaskList() {
 	//render
 	$taskList.html("");
-	tasks.forEach((task,index)=>{
-		$taskList.append(getHTML(task,index));
+	tasks.forEach((task, index) => {
+		$taskList.append(getHTML(task, index));
 	})
-	if (selectedTask != -1){
+	if (selectedTask != -1) {
 		$taskList.children().eq(selectedTask).addClass("text-white bg-dark");
 	}
 }
-function getHTML(task,index){
+function getHTML(task, index) {
 	return `<li class="card  rounded-right mb-1 p-0 border-0 " data-index = "${index}"><div class="d-inline-flex"><btn class = "bg-dark rounded-left" onClick="selectTaskAt(${index})">&nbsp;&nbsp;&nbsp;&nbsp;</btn><span class = "m-3"><btn class="task-text task-item" onClick="removeTaskAt(${index})"> ${task}</btn></span></div></li>`
 }
-function updateLocalStorage(){
-	localStorage.setItem("tasks",JSON.stringify(tasks));
-	localStorage.setItem("selectedTask",selectedTask);
+function saveTasks() {
+	localStorage.setItem("tasks", JSON.stringify(tasks));
+	localStorage.setItem("selectedTask", selectedTask);
 }
 
-function loadLocalStorage(){
+function loadTasks() {
 	var tasks = JSON.parse(localStorage.getItem("tasks"));
-	if (tasks){
-		tasks.forEach((task)=>{
+	if (tasks) {
+		tasks.forEach((task) => {
 			addTask(task);
 		})
 	}
@@ -207,26 +240,96 @@ function loadLocalStorage(){
 	updateTaskList();
 }
 
-function removeTaskAt(index){
+function removeTaskAt(index) {
 	console.log("removing task at index: " + index);
-	tasks.splice(index,1);
-	
+	tasks.splice(index, 1);
+
 	updateTaskList();
-	updateLocalStorage();
+	saveTasks();
 }
 
-function selectTaskAt(index){
-	if (index==0){
+function selectTaskAt(index) {
+	if (index == 0) {
 		return;
 	}
 	console.log("selecting task at index: " + index);
-	tasks.unshift(tasks.splice(index,1));
+	tasks.unshift(tasks.splice(index, 1));
 	updateTaskList();
-	updateLocalStorage();
+	saveTasks();
 }
 
+//settings manager
+
+var settings = {
+	autostartFocus: false,
+	autostartRestAfter: 25 * 60 * 1000,  //25 minutes, default for pomodoro
+	autostartRest: false,
+	restCalculationMethod: {
+		method: "ratio",
+		minutesOfWork: 5,
+		minutesOfRest: 1,
+		workToRestRatio: 5,
+	}
+}
+
+$optionsButton = $("#navbarOptionsButton");
+$optionsButton.click(() => {
+	loadSettings();
+})
+
+$saveOptionsButton = $("#saveOptionsButton");
+$saveOptionsButton.click(() => {
+	saveSettings();
+})
+
+var $settingsElements = {
+	autostartFocus: $("#autostartFocusSwitch"),
+	autostartRest: $("#autostartRestSwitch"),
+	autostartFocusAfter: $("#autostartFocusAfterInput"),
+	minutesOfWork: $("#minutesOfWorkInput"),
+	minutesOfRest: $("#minutesOfRestInput"),
+}
+console.log($settingsElements);
 
 
+function loadSettings() {
+	//load settings from local storage
+	// if empty do nothing
+
+	var loadedSettings = JSON.parse(localStorage.getItem("settings"));
+
+	console.log("loaded settings: " + JSON.stringify(loadedSettings));
+	if (loadedSettings) {
+		settings = loadedSettings
+	}
+}
+
+function saveSettings() {
+
+	// load settings from elements
+	settings.autostartFocus = $settingsElements.autostartFocus.is(":checked");
+	settings.autostartRest = $settingsElements.autostartRest.is(":checked");
+
+	settings.restCalculationMethod.minutesOfRest = parseInt($settingsElements.minutesOfRest.val());
+	settings.restCalculationMethod.minutesOfWork = parseInt($settingsElements.minutesOfWork.val());
+	settings.restCalculationMethod.workToRestRatio = settings.restCalculationMethod.minutesOfWork / settings.restCalculationMethod.minutesOfRest;
+	settings.autostartRestAfter = parseInt($settingsElements.autostartFocusAfter.val()) * 60 * 1000;
+
+	console.log("saving settings: " + JSON.stringify(settings));
+	//save settings to local storage
+	localStorage.setItem("settings", JSON.stringify(settings));
+}
+
+function updateSettings() {
+	//TODO ->  more terse way?
+	$settingsElements.autostartFocus.prop("checked", settings.autostartFocus);
+	$settingsElements.autostartRest.prop("checked", settings.autostartRest);
+	$settingsElements.minutesOfWork.val(settings.restCalculationMethod.minutesOfWork);
+	$settingsElements.minutesOfRest.val(settings.restCalculationMethod.minutesOfRest);
+	$settingsElements.autostartFocusAfter.val(settings.autostartRestAfter / 60 / 1000);
+
+	console.log("drawing settings: " + JSON.stringify(settings));
+}
 
 // helper class for stopwatch 
 // technically a FSM
@@ -373,7 +476,7 @@ class CountDown extends StopWatch {
 
 	_advance() {
 
-		this._time = Math.ceil((this._referenceDate - Date.now()) / this._speed);
+		this._time = (this._referenceDate - Date.now());
 		console.log("countdown left: " + this._time);
 		this._onUpdateCallback(this) //invoke custom callback, passing CountDown object as argument
 		if (this._time <= (this._speed * this._updateDelay)) {

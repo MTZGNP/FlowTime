@@ -1,64 +1,146 @@
 <!doctype html>
 <html lang="en">
-   <head>
-      <title>FlowTime</title>
-      <!-- Required meta tags -->
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-      <!-- Bootstrap CSS -->
-      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-      <!-- fontawesome-->
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-      <link rel="stylesheet" href="./style.css">
-      <!--manifest-->
-      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-      <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-      <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-      <link rel="manifest" href="/site.webmanifest">
-   </head>
-   <body class="bg-neutral font-primary" id="body">
-      <!-- Optional JavaScript -->
-      <!-- jQuery first, then Popper.js, then Bootstrap JS,then fa5 -->
-      <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-         crossorigin="anonymous"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
-         crossorigin="anonymous"></script>
-      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
-         crossorigin="anonymous"></script>
-      <div class="notify justify-content-center align-content-center ">
-         <p id="notifyType" style="
+
+<head>
+   <title>FlowTime</title>
+   <!-- Required meta tags -->
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+   <!-- Bootstrap CSS -->
+   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+   <!-- fontawesome-->
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+   <link rel="stylesheet" href="./style.css">
+   <!--manifest-->
+   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+   <link rel="manifest" href="/site.webmanifest">
+</head>
+
+<body class="bg-neutral font-primary" id="body">
+   <!-- Optional JavaScript -->
+   <!-- jQuery first, then Popper.js, then Bootstrap JS,then fa5 -->
+   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+      crossorigin="anonymous"></script>
+   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+      crossorigin="anonymous"></script>
+
+   <!-- Notifications-->
+   <div class="notify justify-content-center align-content-center ">
+      <p id="notifyType" style="
             margin: 10px;
             "></p>
-      </div>
-      <div class="container mt-5" id="timerBox">
-         <i class="fa fa-circle" aria-hidden="true" id="closeButton"></i>
-         <div class="row d-flex justify-content-center align-content-center  ">
-            <h1 class="display-1 font-weight-bold mr-5 ml-5 mt-5 mb-5  " id="time">00:00</h1>
+   </div>
+   <!--//-->
+
+   <!-- option menu-->
+   <div class="modal fade" id="optionsModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+         <div class="modal-content">
+            <div class="modal-header">
+               <h4 class="modal-title" id="optionsModalTitle">Options</h4>
+               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+               </button>
+            </div>
+            <div class="modal-body">
+
+            <!-- Options for calculating rest -->
+            <div >
+                  <h5 class = "mb-4">Calculating rest</h5>
+                  <div></div>
+                  <span>
+                     <input type="number" min="1" step="1" class = "option-number" id = "minutesOfRestInput">
+                     &nbsp; minutes of rest for every&nbsp;
+                     <input type="number" min="1" step="1" class = "option-number" id = "minutesOfWorkInput">
+                     &nbsp; minutes of work&nbsp;
+                  </span> 
+               </div>
+               <div class = "dropdown-divider mt-3 "></div>
+               <div class="custom-control  custom-switch ">
+                  <input type="checkbox" class="custom-control-input" id="autostartFocusSwitch">
+                  <label class="custom-control-label control-slider" for="autostartFocusSwitch">Autostart Focus
+                     periods?  </label> 
+                  
+               </div>
+               <div class="dropdown-divider"></div>
+               <div class="custom-control custom-switch ">
+                  <input type="checkbox" class="custom-control-input" id="autostartRestSwitch">
+                  <label class="custom-control-label control-slider" for="autostartRestSwitch">Autostart Rest
+                     periods?</label>
+                     <br>after <input type="number" min="1" step="1" class = "option-number" id = "autostartFocusAfterInput">
+                     minutes of work&nbsp;
+               </div>
+               <div class="dropdown-divider"></div>
+
+
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+               <button type="button" class="btn btn-primary" id="saveOptionsButton">Save changes</button>
+            </div>
          </div>
-         <div class="row d-flex  justify-content-center">
-            <button type="button" class=" btn3d btn btn-default btn-lg " id="stopWatchButton">Start</button>
-         </div>
       </div>
-      <div class="container mt-4 " id="taskBox">
-         <p class="font-weight-bold ml-1">Tasks</p>
-         <div class=" mb-1 p-0  align-items-start ">
-            <form class="input-group form-inline " id="taskEntryForm">
-               <input id="taskEntryBox" placeholder="&#xf067;&emsp;New task " autocomplete="off" style="font-family:sans-serif, FontAwesome"
-                  class=" rounded-right form-control font-primary font-weight-bold p-4" type="text"></input>
-            </form>
-         </div>
-         <div class="dropdown-divider"></div>
-         <ul class="p-0 mb-1" id="taskList">
-            
-         </ul>
+   </div>
+   <!--//-->
+
+   <!-- navbar -->
+   <div class="w-nav  container mt-3 mb-5 p-0 ">
+      <a href="/index.html" class="font-weight-bold font-primary text-lg-left" id="navTitle"><i class="fa fa-clock-o"
+            aria-hidden="true"></i> FlowTime</a>
+      <span class=" float-right " id="navButtons">
+         <button class="btn-light rounded  navbar-button"><i class="fa fa-line-chart" aria-hidden="true"></i>
+            Report</button>
+         <button id="navbarOptionsButton" class="btn-light rounded  navbar-button" data-toggle="modal"
+            data-target="#optionsModal"><i class="fa fa-cog m-0 " aria-hidden="true"></i>
+            Options</button>
+
+
+      </span>
+      <div class="dropdown-divider w-nav "></div>
+   </div>
+
+   <!--//-->
+
+   <!--timer-->
+   <div class="container mt-3 w-main" id="timerBox">
+      <i class="fa fa-circle" aria-hidden="true" id="closeButton"></i>
+      <div class="row d-flex justify-content-center align-content-center  ">
+         <h1 class="display-1 font-weight-bold mr-5 ml-5 mt-5 mb-5  " id="time">00:00</h1>
       </div>
+      <div class="row d-flex  justify-content-center">
+         <button type="button" class=" btn3d btn btn-default btn-lg " id="stopWatchButton">Start</button>
       </div>
+   </div>
+   <!--//-->
+
+   <!-- tasks -->
+   <div class="container mt-4 w-main" id="taskBox">
+      <p class="font-weight-bold ml-1">Tasks</p>
+      <div class=" mb-1 p-0  align-items-start ">
+         <form class="input-group form-inline" id="taskEntryForm">
+            <input id="taskEntryBox" placeholder="&#xf067;&emsp;New task " autocomplete="off"
+               style="font-family:sans-serif, FontAwesome"
+               class=" rounded-right form-control font-primary font-weight-bold p-4" type="text"></input>
+         </form>
       </div>
-      </div>
-      <script src="index.js"></script>
-   </body>
+      <div class="dropdown-divider"></div>
+      <ul class="p-0 mb-1" id="taskList">
+
+      </ul>
+   </div>
+
+   <!--//-->
+
+   <!-- main script, handles tasks and timer-->
+   <script src="index.js"></script>
+</body>
+
 </html>
