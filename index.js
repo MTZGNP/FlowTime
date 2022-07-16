@@ -26,11 +26,39 @@ var state = "neutral"; //neutral => focus => rest => neutral
 var stopWatch; //stores current StopWatch object
 var countDown; //stores current countdown object
 var rest; //stores deserved rest status object
+
+var cheats = {
+	
+	//adds ms to stopwatch
+	addsw : (ms) => {
+		stopWatch._referenceDate -= ms;
+	},
+	//adds ms to countdown (decreasing time left)
+	addcd : (ms) => {
+		countDown._referenceDate -= ms
+	},
+
+	//start and stop logging info to console
+	startLogging : () => {
+		cheats.log = true;
+	},
+	stopLogging : () => {
+		cheats.log = false;
+	},
+	log: false
+}
+
+function log(...args){
+	if (cheats.log) {
+		console.log(...args);
+	}
+}
+
 function calculateRestTime(focusTime) {
     //returns the # of milliseconds user should rest for based on specified method
     //(e.g) method = ratio -> restTime = focusTime / workToRestratio
     var restTime;
-    console.log("calculating rest time for focus time: " + focusTime);
+    log("calculating rest time for focus time: " + focusTime);
     if (settings.restCalculationMethod.method == "ratio") {
         periods = Math.floor(focusTime / 60 / 1000 / settings.restCalculationMethod.minutesOfWork)
         restTime = periods * 60 * 1000 * settings.restCalculationMethod.minutesOfRest;
@@ -53,7 +81,7 @@ function displayTime(that) {
 }
 
 function updateTitle(that) {
-    console.log("current state: " + state);
+    log("current state: " + state);
     switch (state) {
         case "focus":
             document.title = formatTime(that) + " - Focusing";
@@ -143,7 +171,7 @@ function startNeutral() {
     updateTitle();
 }
 $bigButton.click(function() {
-    console.log("stopwatch button clicked");
+    log("stopwatch button clicked");
     playSound(sounds.BUTTON);
     switch (state) {
         case "neutral":
@@ -180,7 +208,7 @@ var $taskList = $("#taskList")
 var tasks = [];
 var selectedTask = 0;
 $taskEntryForm.submit((that) => {
-    console.log("task submitted");
+    log("task submitted");
     that.preventDefault();
     var task = $taskEntryBox.val().trim();
     if (task == "") {
@@ -229,7 +257,7 @@ function loadTasks() {
 }
 
 function removeTaskAt(index) {
-    console.log("removing task at index: " + index);
+    log("removing task at index: " + index);
     tasks.splice(index, 1);
     updateTaskList();
     saveTasks();
@@ -239,7 +267,7 @@ function selectTaskAt(index) {
     if (index == 0) {
         return;
     }
-    console.log("selecting task at index: " + index);
+    log("selecting task at index: " + index);
     tasks.unshift(tasks.splice(index, 1));
     updateTaskList();
     saveTasks();
@@ -271,13 +299,13 @@ var $settingsElements = {
     minutesOfWork: $("#minutesOfWorkInput"),
     minutesOfRest: $("#minutesOfRestInput"),
 }
-console.log($settingsElements);
+log($settingsElements);
 
 function loadSettings() {
     //load settings from local storage
     // if empty do nothing
     var loadedSettings = JSON.parse(localStorage.getItem("settings"));
-    console.log("loaded settings: " + JSON.stringify(loadedSettings));
+    log("loaded settings: " + JSON.stringify(loadedSettings));
     if (loadedSettings) {
         settings = loadedSettings
     }
@@ -291,7 +319,7 @@ function saveSettings() {
     settings.restCalculationMethod.minutesOfWork = parseInt($settingsElements.minutesOfWork.val());
     settings.restCalculationMethod.workToRestRatio = settings.restCalculationMethod.minutesOfWork / settings.restCalculationMethod.minutesOfRest;
     settings.autostartRestAfter = parseInt($settingsElements.autostartFocusAfter.val()) * 60 * 1000;
-    console.log("saving settings: " + JSON.stringify(settings));
+    log("saving settings: " + JSON.stringify(settings));
     //save settings to local storage
     localStorage.setItem("settings", JSON.stringify(settings));
 }
@@ -303,7 +331,7 @@ function updateSettings() {
     $settingsElements.minutesOfWork.val(settings.restCalculationMethod.minutesOfWork);
     $settingsElements.minutesOfRest.val(settings.restCalculationMethod.minutesOfRest);
     $settingsElements.autostartFocusAfter.val(settings.autostartRestAfter / 60 / 1000);
-    console.log("drawing settings: " + JSON.stringify(settings));
+    log("drawing settings: " + JSON.stringify(settings));
 }
 // helper class for stopwatch 
 // technically a FSM
@@ -333,6 +361,7 @@ class StopWatch {
     stop() {
         this._state = "stopped";
         clearInterval(this._updateInterval);
+		
         this.reset()
     }
     // pause without resetting time 
@@ -340,8 +369,8 @@ class StopWatch {
     pause() {
         if (this._state == "running") {
             this._state = "paused";
-            console.log("paused at: " + this._time);
-            console.log("pause reference: " + this._referenceDate);
+            log("paused at: " + this._time);
+            log("pause reference: " + this._referenceDate);
             clearInterval(this._updateInterval);
         }
     }
@@ -404,7 +433,7 @@ class StopWatch {
     _advance() {
         this._time = (Date.now() - this._referenceDate) * this._speed;
         this._onUpdateCallback(this) //invoke custom callback, passing stopwatch object as argument
-        console.log(this._time);
+        log(this._time);
     }
 }
 class CountDown extends StopWatch {
@@ -420,15 +449,15 @@ class CountDown extends StopWatch {
     //once time reaches 0, countdown is stopped and onFinishedCallback is invoked
     _advance() {
         this._time = (this._referenceDate - Date.now());
-        console.log("countdown left: " + this._time);
-        this._onUpdateCallback(this) //invoke custom callback, passing CountDown object as argument
-        if (this._time <= (this._speed * this._updateDelay)) {
+        log("countdown left: " + this._time);
+        if (this._time <= 0) {
             this._onFinish()
         }
+		this._onUpdateCallback(this) //invoke custom callback, passing CountDown object as argument
     }
     //adds time to countdown by shifting the reference date forwards (since we are counting up to reference date)
     _shiftReferenceDate(shift) {
-        console.log("shifting ref forward")
+        log("shifting ref forward")
         this._referenceDate = Date.now() + shift;
     }
     _initReferenceDate() {
@@ -449,3 +478,4 @@ class CountDown extends StopWatch {
         this._onFinishedCallback = () => {};
     }
 }
+
