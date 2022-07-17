@@ -28,30 +28,30 @@ var countDown; //stores current countdown object
 var rest; //stores deserved rest status object
 
 var cheats = {
-	
-	//adds ms to stopwatch
-	addsw : (ms) => {
-		stopWatch._referenceDate -= ms;
-	},
-	//adds ms to countdown (decreasing time left)
-	addcd : (ms) => {
-		countDown._referenceDate -= ms
-	},
 
-	//start and stop logging info to console
-	startLogging : () => {
-		cheats.log = true;
-	},
-	stopLogging : () => {
-		cheats.log = false;
-	},
-	log: false
+    //adds ms to stopwatch
+    addsw: (ms) => {
+        stopWatch._referenceDate -= ms;
+    },
+    //adds ms to countdown (decreasing time left)
+    addcd: (ms) => {
+        countDown._referenceDate -= ms
+    },
+
+    //start and stop logging info to console
+    startLogging: () => {
+        cheats.log = true;
+    },
+    stopLogging: () => {
+        cheats.log = false;
+    },
+    log: false
 }
 
-function log(...args){
-	if (cheats.log) {
-		console.log(...args);
-	}
+function log(...args) {
+    if (cheats.log) {
+        console.log(...args);
+    }
 }
 
 function calculateRestTime(focusTime) {
@@ -113,7 +113,7 @@ function notify(message) {
     $(".notify").toggleClass("active");
     $("#notifyType").toggleClass("success");
     $("#notifyType").html(message)
-    setTimeout(function() {
+    setTimeout(function () {
         $(".notify").removeClass("active");
         $("#notifyType").removeClass("success");
     }, 2000);
@@ -170,7 +170,7 @@ function startNeutral() {
     countDown.stop()
     updateTitle();
 }
-$bigButton.click(function() {
+$bigButton.click(function () {
     log("stopwatch button clicked");
     playSound(sounds.BUTTON);
     switch (state) {
@@ -272,6 +272,7 @@ function selectTaskAt(index) {
     updateTaskList();
     saveTasks();
 }
+
 //settings manager
 var settings = {
     autostartFocus: false,
@@ -333,10 +334,13 @@ function updateSettings() {
     $settingsElements.autostartFocusAfter.val(settings.autostartRestAfter / 60 / 1000);
     log("drawing settings: " + JSON.stringify(settings));
 }
+
+
+
 // helper class for stopwatch 
 // technically a FSM
 class StopWatch {
-    constructor(speed = 1, updateDelay = 200, onUpdateCallback = () => {}) {
+    constructor(speed = 1, updateDelay = 200, onUpdateCallback = () => { }) {
         this._time = 0 //# of milliseconds on stopwatch
         this._referenceDate; //PRIVATE date at which stopwatch STARTS 
         this._state = "stopped" // "stopped" - "running" - "paused"
@@ -361,7 +365,7 @@ class StopWatch {
     stop() {
         this._state = "stopped";
         clearInterval(this._updateInterval);
-		
+
         this.reset()
     }
     // pause without resetting time 
@@ -413,7 +417,7 @@ class StopWatch {
     }
     //set a custom callback functions (e.g updating UI based on stopwatch time)
     releaseOnUpdateCallback() {
-        this._onUpdateCallback = () => {};
+        this._onUpdateCallback = () => { };
     }
     //set a callback which is called everytime stopwatch time is updated
     //callback recieves stopWatch object as argument
@@ -437,7 +441,7 @@ class StopWatch {
     }
 }
 class CountDown extends StopWatch {
-    constructor(duration, speed = 1, updateDelay = 200, onUpdateCallback = () => {}, onFinishedCallback = () => {}) {
+    constructor(duration, speed = 1, updateDelay = 200, onUpdateCallback = () => { }, onFinishedCallback = () => { }) {
         super(speed, updateDelay, onUpdateCallback);
         this._referenceDate = Date.now() + duration; //Date at which countdown ENDS
         this._time = duration; //time REMAINING in countdown
@@ -453,7 +457,7 @@ class CountDown extends StopWatch {
         if (this._time <= 0) {
             this._onFinish()
         }
-		this._onUpdateCallback(this) //invoke custom callback, passing CountDown object as argument
+        this._onUpdateCallback(this) //invoke custom callback, passing CountDown object as argument
     }
     //adds time to countdown by shifting the reference date forwards (since we are counting up to reference date)
     _shiftReferenceDate(shift) {
@@ -475,7 +479,7 @@ class CountDown extends StopWatch {
         this._onFinishedCallback = fun;
     }
     releaseOnFinishedCallback() {
-        this._onFinishedCallback = () => {};
+        this._onFinishedCallback = () => { };
     }
 }
 
