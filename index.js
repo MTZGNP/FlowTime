@@ -18,6 +18,7 @@ $(document).ready(() => {
     updateSettings();
     loadTasks();
     updateTaskList();
+    saveTasks();
 })
 var $bigButton = $("#stopWatchButton");
 var $timeDisplay = $("#time");
@@ -53,19 +54,21 @@ var cheats = {
     stopLogging: () => {
         cheats.log = false;
     },
-    log: true,
-    logFilter : l.ALL, //filter log to only show certain types of log messages
+    log: false,
+    logFilter: [], //filter log to only show certain types of log messages
     //add and remove items from log filter
     filterType: (...args) => {
         cheats.logFilter = cheats.logFilter.concat(args);
     },
     unfilterType: (...args) => {
         cheats.logFilter = cheats.logFilter.filter(x => !args.includes(x));
+    },
+    purgeLocalStorage: () => {
+        localStorage.clear();
     }
-
 }
 
-function log(type,...args) {
+function log(type, ...args) {
     if (cheats.log && cheats.logFilter.includes(type)) {
         console.log(...args);
     }
@@ -76,7 +79,7 @@ function calculateRestTime(focusTime) {
     //returns the # of milliseconds user should rest for based on specified method
     //(e.g) method = ratio -> restTime = focusTime / workToRestratio
     var restTime;
-    log(l.TIMER,"calculating rest time for focus time: " + focusTime);
+    log(l.TIMER, "calculating rest time for focus time: " + focusTime);
     if (settings.restCalculationMethod.method == "ratio") {
         periods = Math.floor(focusTime / 60 / 1000 / settings.restCalculationMethod.minutesOfWork)
         restTime = periods * 60 * 1000 * settings.restCalculationMethod.minutesOfRest;
@@ -99,7 +102,7 @@ function displayTime(that) {
 }
 
 function updateTitle(that) {
-    log(l.STATE,"current state: " + state);
+    log(l.STATE, "current state: " + state);
     switch (state) {
         case "focus":
             document.title = formatTime(that) + " - Focusing";
@@ -189,7 +192,7 @@ function startNeutral() {
     updateTitle();
 }
 $bigButton.click(function () {
-    log(l.UI,"stopwatch button clicked");
+    log(l.UI, "stopwatch button clicked");
     playSound(sounds.BUTTON);
     switch (state) {
         case "neutral":
@@ -226,7 +229,7 @@ var $taskList = $("#taskList")
 var tasks = [];
 var selectedTask = 0;
 $taskEntryForm.submit((that) => {
-    log(l.TASKS,"task submitted");
+    log(l.TASKS, "task submitted");
     that.preventDefault();
     var task = $taskEntryBox.val().trim();
     if (task == "") {
@@ -275,7 +278,7 @@ function loadTasks() {
 }
 
 function removeTaskAt(index) {
-    log(l.TASKS,"removing task at index: " + index);
+    log(l.TASKS, "removing task at index: " + index);
     tasks.splice(index, 1);
     updateTaskList();
     saveTasks();
@@ -285,7 +288,7 @@ function selectTaskAt(index) {
     if (index == 0) {
         return;
     }
-    log(l.TASKS,"selecting task at index: " + index);
+    log(l.TASKS, "selecting task at index: " + index);
     tasks.unshift(tasks.splice(index, 1));
     updateTaskList();
     saveTasks();
@@ -301,32 +304,39 @@ var settings = {
         minutesOfWork: 5,
         minutesOfRest: 1,
         workToRestRatio: 5,
+    },
+    dev : false,
+    devOptions :{
+        log : false,
+        logFilter : l.ALL,
     }
 }
-$optionsButton = $("#navbarOptionsButton");
-$optionsButton.click(() => {
-    loadSettings();
-})
-$saveOptionsButton = $("#saveOptionsButton");
-$saveOptionsButton.click(() => {
-    saveSettings();
-})
+
 var $settingsElements = {
     autostartFocus: $("#autostartFocusSwitch"),
     autostartRest: $("#autostartRestSwitch"),
     autostartFocusAfter: $("#autostartFocusAfterInput"),
     minutesOfWork: $("#minutesOfWorkInput"),
     minutesOfRest: $("#minutesOfRestInput"),
+    devOptions: $("#devOptions"),
+    loggingSwitch : $("#loggingSwitch"),
+    loggingTypes : $("#loggingTypes"),
 }
-log(l.SETTINGS,"settings",$settingsElements);
+log(l.SETTINGS, "settings", $settingsElements);
+
 
 function loadSettings() {
     //load settings from local storage
     // if empty do nothing
     var loadedSettings = JSON.parse(localStorage.getItem("settings"));
-    log(l.SETTINGS,"loaded settings: " + JSON.stringify(loadedSettings));
+    log(l.SETTINGS, "loaded settings: " + loadedSettings);
+    // set cheats
     if (loadedSettings) {
         settings = loadedSettings
+    }
+    if(settings.dev){
+        cheats.log = settings.devOptions.log;
+        cheats.logFilter = settings.devOptions.logFilter;    
     }
 }
 
@@ -338,7 +348,18 @@ function saveSettings() {
     settings.restCalculationMethod.minutesOfWork = parseInt($settingsElements.minutesOfWork.val());
     settings.restCalculationMethod.workToRestRatio = settings.restCalculationMethod.minutesOfWork / settings.restCalculationMethod.minutesOfRest;
     settings.autostartRestAfter = parseInt($settingsElements.autostartFocusAfter.val()) * 60 * 1000;
-    log(l.SETTINGS,"saving settings: " + JSON.stringify(settings));
+    settings.devOptions.log = $settingsElements.loggingSwitch.is(":checked");
+    log(l.SETTINGS, $settingsElements.loggingSwitch.is(":checked"));
+    //save logging types
+    var loggingTypes = [];
+    for (var i = 0; i < l.ALL.length; i++) {
+        log(l.SETTINGS,$settingsElements.loggingTypes.children().eq(i).text().trim());
+        if($(`#${l.ALL[i]}LoggingType`).is(":checked")){
+            log(l.SETTINGS, "checked");
+            loggingTypes.push(l.ALL[i]) 
+        };
+    }
+    settings.devOptions.logFilter = loggingTypes;
     //save settings to local storage
     localStorage.setItem("settings", JSON.stringify(settings));
 }
@@ -350,9 +371,77 @@ function updateSettings() {
     $settingsElements.minutesOfWork.val(settings.restCalculationMethod.minutesOfWork);
     $settingsElements.minutesOfRest.val(settings.restCalculationMethod.minutesOfRest);
     $settingsElements.autostartFocusAfter.val(settings.autostartRestAfter / 60 / 1000);
-    log(l.SETTINGS,"drawing settings: " + JSON.stringify(settings));
+    $settingsElements.loggingSwitch.prop("checked", settings.devOptions.log);
+    $settingsElements.loggingTypes.html("")
+    
+    if (settings.dev) {
+        for(var i = 0; i < l.ALL.length; i++){
+            //append checkbox with label
+            $settingsElements.loggingTypes.append(
+                `<div class="form-check text-light">
+                <input class="form-check-input" type="checkbox" value="" id="${l.ALL[i]}LoggingType" ${settings.devOptions.logFilter.includes(l.ALL[i])?"checked"  : "unchecked"}>
+                <label class="form-check-label" for="${l.ALL[i]}LoggingType">
+                  ${l.ALL[i]}
+                </label>
+              </div>`
+            );
+        }
+        $settingsElements.devOptions.show();
+        if (settings.devOptions.log) {
+            $settingsElements.loggingTypes.show();
+        }else{
+            $settingsElements.loggingTypes.hide();
+        }
+    }else{
+        $settingsElements.devOptions.hide();
+    }
+    log(l.SETTINGS, "drawing settings: " + JSON.stringify(settings));
 }
 
+$optionsButton = $("#navbarOptionsButton");
+$optionsButton.click(() => {
+    loadSettings();
+})
+$saveOptionsButton = $("#saveOptionsButton");
+$saveOptionsButton.click(() => {
+    if (state != "neutral" && !confirm("refresh page?, you will lose your current session")){
+        return;
+    }
+    saveSettings();
+    location.reload();
+})
+$purgeLocalStorageButton = $("#purgeLocalStorageButton");
+$purgeLocalStorageButton.click(() => {
+    localStorage.clear();
+    location.reload();
+})
+$optionsTitle = $("#optionsModalTitle");
+var timesClicked = 0;
+$optionsTitle.click(() => {
+    log(l.SETTINGS, "clicked options title");
+    if (settings.dev){
+        log(l.SETTINGS, "already in dev mode");
+        notify("Already in devMode");
+        return;
+    }
+    timesClicked++;
+    if(timesClicked == 5){
+        
+        settings.dev = true;
+        updateSettings();
+        log(l.SETTINGS, "entered dev mode");
+        timesClicked = 0;
+    }
+    
+})
+//when logging switch is enabled , show logging types
+$settingsElements.loggingSwitch.change(() => {
+    if ($settingsElements.loggingSwitch.is(":checked")) {
+        $settingsElements.loggingTypes.show();
+    }else{
+        $settingsElements.loggingTypes.hide();
+    }
+})
 
 
 // helper class for stopwatch 
@@ -391,8 +480,8 @@ class StopWatch {
     pause() {
         if (this._state == "running") {
             this._state = "paused";
-            log(l.TIMER,"paused at: " + this._time);
-            log(l.TIMER,"pause reference: " + this._referenceDate);
+            log(l.TIMER, "paused at: " + this._time);
+            log(l.TIMER, "pause reference: " + this._referenceDate);
             clearInterval(this._updateInterval);
         }
     }
@@ -455,7 +544,7 @@ class StopWatch {
     _advance() {
         this._time = (Date.now() - this._referenceDate) * this._speed;
         this._onUpdateCallback(this) //invoke custom callback, passing stopwatch object as argument
-        log(l.TIMER,this._time);
+        log(l.TIMER, this._time);
     }
 }
 class CountDown extends StopWatch {
@@ -471,7 +560,7 @@ class CountDown extends StopWatch {
     //once time reaches 0, countdown is stopped and onFinishedCallback is invoked
     _advance() {
         this._time = (this._referenceDate - Date.now());
-        log(l.TIMER,"countdown left: " + this._time);
+        log(l.TIMER, "countdown left: " + this._time);
         if (this._time <= 0) {
             this._onFinish()
         }
@@ -479,7 +568,7 @@ class CountDown extends StopWatch {
     }
     //adds time to countdown by shifting the reference date forwards (since we are counting up to reference date)
     _shiftReferenceDate(shift) {
-        log(l.TIMER,"shifting ref forward")
+        log(l.TIMER, "shifting ref forward")
         this._referenceDate = Date.now() + shift;
     }
     _initReferenceDate() {
@@ -488,6 +577,7 @@ class CountDown extends StopWatch {
     _onFinish() {
         this.stop()
         this.state = "finished"
+        this._time = 0;
         this._onFinishedCallback(this)
     }
     reset() {
@@ -500,4 +590,5 @@ class CountDown extends StopWatch {
         this._onFinishedCallback = () => { };
     }
 }
+
 
