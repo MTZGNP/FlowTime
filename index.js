@@ -305,10 +305,10 @@ var settings = {
         minutesOfRest: 1,
         workToRestRatio: 5,
     },
-    dev : false,
-    devOptions :{
-        log : false,
-        logFilter : l.ALL,
+    dev: false,
+    devOptions: {
+        log: false,
+        logFilter: l.ALL,
     }
 }
 
@@ -319,8 +319,8 @@ var $settingsElements = {
     minutesOfWork: $("#minutesOfWorkInput"),
     minutesOfRest: $("#minutesOfRestInput"),
     devOptions: $("#devOptions"),
-    loggingSwitch : $("#loggingSwitch"),
-    loggingTypes : $("#loggingTypes"),
+    loggingSwitch: $("#loggingSwitch"),
+    loggingTypes: $("#loggingTypes"),
 }
 log(l.SETTINGS, "settings", $settingsElements);
 
@@ -334,9 +334,9 @@ function loadSettings() {
     if (loadedSettings) {
         settings = loadedSettings
     }
-    if(settings.dev){
+    if (settings.dev) {
         cheats.log = settings.devOptions.log;
-        cheats.logFilter = settings.devOptions.logFilter;    
+        cheats.logFilter = settings.devOptions.logFilter;
     }
 }
 
@@ -353,10 +353,10 @@ function saveSettings() {
     //save logging types
     var loggingTypes = [];
     for (var i = 0; i < l.ALL.length; i++) {
-        log(l.SETTINGS,$settingsElements.loggingTypes.children().eq(i).text().trim());
-        if($(`#${l.ALL[i]}LoggingType`).is(":checked")){
+        log(l.SETTINGS, $settingsElements.loggingTypes.children().eq(i).text().trim());
+        if ($(`#${l.ALL[i]}LoggingType`).is(":checked")) {
             log(l.SETTINGS, "checked");
-            loggingTypes.push(l.ALL[i]) 
+            loggingTypes.push(l.ALL[i])
         };
     }
     settings.devOptions.logFilter = loggingTypes;
@@ -373,13 +373,13 @@ function updateSettings() {
     $settingsElements.autostartFocusAfter.val(settings.autostartRestAfter / 60 / 1000);
     $settingsElements.loggingSwitch.prop("checked", settings.devOptions.log);
     $settingsElements.loggingTypes.html("")
-    
+
     if (settings.dev) {
-        for(var i = 0; i < l.ALL.length; i++){
+        for (var i = 0; i < l.ALL.length; i++) {
             //append checkbox with label
             $settingsElements.loggingTypes.append(
                 `<div class="form-check text-light">
-                <input class="form-check-input" type="checkbox" value="" id="${l.ALL[i]}LoggingType" ${settings.devOptions.logFilter.includes(l.ALL[i])?"checked"  : "unchecked"}>
+                <input class="form-check-input" type="checkbox" value="" id="${l.ALL[i]}LoggingType" ${settings.devOptions.logFilter.includes(l.ALL[i]) ? "checked" : "unchecked"}>
                 <label class="form-check-label" for="${l.ALL[i]}LoggingType">
                   ${l.ALL[i]}
                 </label>
@@ -389,10 +389,10 @@ function updateSettings() {
         $settingsElements.devOptions.show();
         if (settings.devOptions.log) {
             $settingsElements.loggingTypes.show();
-        }else{
+        } else {
             $settingsElements.loggingTypes.hide();
         }
-    }else{
+    } else {
         $settingsElements.devOptions.hide();
     }
     log(l.SETTINGS, "drawing settings: " + JSON.stringify(settings));
@@ -404,7 +404,7 @@ $optionsButton.click(() => {
 })
 $saveOptionsButton = $("#saveOptionsButton");
 $saveOptionsButton.click(() => {
-    if (state != "neutral" && !confirm("refresh page?, you will lose your current session")){
+    if (state != "neutral" && !confirm("refresh page?, you will lose your current session")) {
         return;
     }
     saveSettings();
@@ -419,26 +419,26 @@ $optionsTitle = $("#optionsModalTitle");
 var timesClicked = 0;
 $optionsTitle.click(() => {
     log(l.SETTINGS, "clicked options title");
-    if (settings.dev){
+    if (settings.dev) {
         log(l.SETTINGS, "already in dev mode");
         notify("Already in devMode");
         return;
     }
     timesClicked++;
-    if(timesClicked == 5){
-        
+    if (timesClicked == 5) {
+
         settings.dev = true;
         updateSettings();
         log(l.SETTINGS, "entered dev mode");
         timesClicked = 0;
     }
-    
+
 })
 //when logging switch is enabled , show logging types
 $settingsElements.loggingSwitch.change(() => {
     if ($settingsElements.loggingSwitch.is(":checked")) {
         $settingsElements.loggingTypes.show();
-    }else{
+    } else {
         $settingsElements.loggingTypes.hide();
     }
 })
