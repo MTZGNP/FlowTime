@@ -106,7 +106,7 @@
 
    <!-- navbar -->
 
-   <div class="w-nav  container mt-3 mb-5  p-1 ">
+   <div class="w-nav unselectable container mt-3 mb-5  p-1 ">
       <a href="/index.html" class="font-weight-bold font-primary text-lg-left" id="navTitle"><i
             class="fas fa-clock fa-sm fa-fw"></i> FlowTime</a>
       <span class=" float-right" id="navButtons">
@@ -125,9 +125,10 @@
 
    <!--timer-->
    <div class="container mt-3 w-main" id="timerBox">
-      <i class="fas fa-circle fa-sm fa-fw" id="closeButton"></i>
+
+      <span class = "p-0" id = "closeButton"><i class="fas fa-circle fa-sm fa-fw"></i></span>
       <div class="row d-flex justify-content-center align-content-center  ">
-         <h1 class="display-1 font-weight-bold m-5  " id="time">00:00</h1>
+         <h1 class="display-1 font-weight-bold m-5 unselectable " id="time">00:00</h1>
       </div>
       <div class="row d-flex  justify-content-center">
          <button type="button" class=" btn3d btn btn-default btn-lg " id="stopWatchButton">Start</button>
@@ -137,7 +138,7 @@
 
    <!-- tasks -->
    <div class="container mt-4 w-main" id="taskBox">
-      <p class="font-weight-bold ml-1">Tasks</p>
+      <p class="font-weight-bold ml-1 unselectable">Tasks</p>
       <div class=" mb-1 p-0  align-items-start ">
          <form class="input-group form-inline" id="taskEntryForm">
             <input id="taskEntryBox" aria-label="Add new task" placeholder="+ New task " autocomplete="off"

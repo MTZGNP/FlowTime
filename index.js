@@ -250,15 +250,15 @@ function updateTaskList() {
     //render
     $taskList.html("");
     tasks.forEach((task, index) => {
-        $taskList.append(getHTML(task, index));
+        $taskList.append(getTaskHTML(task, index));
     })
     if (selectedTask != -1) {
         $taskList.children().eq(selectedTask).addClass("text-white bg-dark");
     }
 }
 
-function getHTML(task, index) {
-    return `<li class="card  rounded-right mb-1 p-0 border-0 " data-index = "${index}"><div class="d-inline-flex"><btn class = "bg-dark rounded-left" onClick="selectTaskAt(${index})">&nbsp;&nbsp;&nbsp;&nbsp;</btn><span class = "m-3"><btn class="task-text task-item" onClick="removeTaskAt(${index})"> ${task}</btn></span></div></li>`
+function getTaskHTML(task, index) {
+    return `<li class="card  rounded-right mb-1 p-0 border-0 " data-index = "${index}"><div class="d-inline-flex"><btn class = "unselectable bg-dark rounded-left" onClick="selectTaskAt(${index})">&nbsp;&nbsp;&nbsp;&nbsp;</btn><span class = "m-3"><btn class="task-text task-item" onClick="removeTaskAt(${index})"> ${task}</btn></span></div></li>`
 }
 
 function saveTasks() {
