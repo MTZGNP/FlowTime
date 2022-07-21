@@ -33,6 +33,9 @@
   padding: 10px;
   margin: 0px auto ;
 }
+#optionsModal{
+  margin-top: 30px;
+}
 #alert{
     z-index: 1;
     position: absolute;
@@ -126,6 +129,7 @@
 }
 
 .notify{  
+  z-index: 10000;
   position:absolute;
   top:0px;
   left: 0px;
