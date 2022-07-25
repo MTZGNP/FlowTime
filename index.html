@@ -104,13 +104,41 @@
 
    <!--//-->
 
+   <!-- Report Menu-->
+   <div class="modal fade" id="reportModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+         <div class="modal-content">
+            <div class="modal-header">
+               <h4 class="modal-title unselectable" id="reportModalTitle">Report</h4>
+               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+               </button>
+            </div>
+            <span class="modal-body ">
+               <div class = "reportBox rounded-0 bg-light">
+                  <i class="fas fa-clock fa-lg fa-fw"></i> Focused for <span id = "reportFocusTime">00:00</span>
+               </div>
+            </span>
+            <span class="modal-body ">
+               <div class = "reportBox rounded-0 bg-light">
+                  <i class="fas fa-clock fa-lg fa-fw" ></i> Rested for <span id="reportRestTime">00:00</span>
+               </div>
+            </span>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+               
+            </div>
+         </div>
+      </div>
+   </div>
    <!-- navbar -->
 
    <div class="w-nav unselectable container mt-3 mb-5  p-1 ">
       <a href="/index.html" class="font-weight-bold font-primary text-lg-left" id="navTitle"><i
             class="fas fa-clock fa-sm fa-fw"></i> FlowTime</a>
       <span class=" float-right" id="navButtons">
-         <button class="btn-light rounded  navbar-button"><i class="fas fa-chart-line fa-lg fa-fw"></i>
+         <button id = "navbarReportButton" class="btn-light rounded  navbar-button" data-toggle="modal"
+         data-target="#reportModal"><i class="fas fa-chart-line fa-lg fa-fw"></i>
             Report</button>
          <button id="navbarOptionsButton" class="btn-light rounded  navbar-button" data-toggle="modal"
             data-target="#optionsModal"><i class="fa fa-cog m-0 " aria-hidden="true"></i>

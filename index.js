@@ -1,4 +1,7 @@
 // constants
+const SEC = 1000;
+const MIN = 60 * SEC;
+const HOUR = 60 * MIN;
 const SPEED = 1;
 const REFRESH_RATE = 100;
 const FOCUS_COLOUR = "#F26157"
@@ -9,16 +12,35 @@ const BG_COLOURS = {
     "rest": REST_COLOUR,
     "neutral": NEUTRAL_COLOUR
 }
+
+//event -> type, time,data
+const events = {
+    START_FOCUS: "start_focus",
+    STOP_FOCUS: "stop_focus",
+    START_BREAK: "start_break",
+    STOP_BREAK: "stop_break",
+    FORCE_STOP_FOCUS: "force_stop_work",
+    FORCE_STOP_BREAK: "force_stop_break",
+    START: ["start_focus", "start_break"],
+    STOP: ["stop_focus", "stop_break"],
+    FOCUS:["start_focus", "stop_focus"],
+    BREAK:["start_break", "stop_break"],
+    
+}
 const sounds = {
     RING: "bell.wav",
     BUTTON: "click.mp3"
 }
+
+
+
 $(document).ready(() => {
     loadSettings();
     updateSettings();
     loadTasks();
     updateTaskList();
     saveTasks();
+    report.loadReport();
 })
 var $bigButton = $("#stopWatchButton");
 var $timeDisplay = $("#time");
@@ -33,7 +55,8 @@ const l = {
     TASKS: "task",
     SETTINGS: "settings",
     UI: "UI",
-    ALL: ["timer", "state", "task", "settings", "UI"]
+    REPORT: "report",
+    ALL: ["timer", "state", "task", "settings", "UI", "report"]
 } //logging types
 
 var cheats = {
@@ -146,6 +169,7 @@ function playSound(sound) {
 }
 
 function startFocus() {
+    report.addEvent(events.START_FOCUS, new Date(), {task: tasks[selectedTask]});
     changeState("focus");
     $bigButton.text("Rest");
     stopWatch = new StopWatch(SPEED, REFRESH_RATE,
@@ -155,6 +179,7 @@ function startFocus() {
             rest = calculateRestTime(that.getTotalMilliseconds());
             $bigButton.text("Rest " + (rest.deserving ? "(" + (rest.restTime / 60 / 1000) + " min)" : ""));
             if (settings.autostartRest && that.getTotalMilliseconds() > settings.autostartRestAfter) {
+                report.addEvent(events.STOP_FOCUS, new Date(), {task: tasks[selectedTask]});
                 playSound(sounds.RING);
                 changeState("rest");
                 startRest();
@@ -164,6 +189,7 @@ function startFocus() {
 }
 
 function startRest() {
+    report.addEvent(events.START_BREAK, new Date(), {task: tasks[selectedTask]});
     changeState("rest");
     $bigButton.text("Skip");
     stopWatch.stop();
@@ -172,8 +198,9 @@ function startRest() {
             displayTime(that);
             updateTitle(that);
         },
-        () => { //OnFinish
+        () => { //OnFinish\
             playSound(sounds.RING);
+            report.addEvent(events.END_BREAK, new Date(), {task: tasks[selectedTask]});
             if (settings.autostartFocus) {
                 changeState("focus");
                 startFocus();
@@ -203,9 +230,11 @@ $bigButton.click(function () {
                 notify("You have to work for at least " + (settings.restCalculationMethod.minutesOfWork) + " minutes");
                 break;
             }
+            report.addEvent(events.STOP_FOCUS, new Date(), {task: tasks[selectedTask]});
             startRest();
             break;
         case "rest":
+            report.addEvent(events.STOP_BREAK, new Date(), {task: tasks[selectedTask]});
             startNeutral();
             break;
     }
@@ -217,6 +246,12 @@ $closeButton.click(() => {
     }
     if (state == "focus" && rest.deserving && !confirm("discard session?")) {
         return;
+    }
+
+    if(state == "rest"){
+        report.addEvent(events.FORCE_STOP_BREAK, new Date(), {task: tasks[selectedTask]});
+    }else if(state == "focus"){
+        report.addEvent(events.FORCE_STOP_FOCUS, new Date(), {task: tasks[selectedTask]});
     }
     $bigButton.text("Start");
     changeState("neutral");
@@ -263,7 +298,7 @@ function getTaskHTML(task, index) {
 
 function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
-    localStorage.setItem("selectedTask", selectedTask);
+    localStorage.setItem("selectedTask", selectedTask!= null ? selectedTask : 0);
 }
 
 function loadTasks() {
@@ -297,7 +332,7 @@ function selectTaskAt(index) {
 //settings manager
 var settings = {
     autostartFocus: false,
-    autostartRestAfter: 25 * 60 * 1000, //25 minutes, default for pomodoro
+    autostartRestAfter: 25 * MIN, //25 minutes, default for pomodoro
     autostartRest: false,
     restCalculationMethod: {
         method: "ratio",
@@ -441,6 +476,22 @@ $settingsElements.loggingSwitch.change(() => {
     } else {
         $settingsElements.loggingTypes.hide();
     }
+})
+
+//report modal
+$reportButton = $("#navbarReportButton");
+$reportElements = {
+    focusTimeText : $("#reportFocusTime"),
+    restTimeText : $("#reportRestTime"),
+}
+$reportButton.click(() => {
+    log(l.REPORT, "clicked report button");
+    focusTime = report.ofType(...events.FOCUS).totalDuration()
+    restTime = report.ofType(...events.BREAK).totalDuration()
+    log(l.REPORT, "focusTime: " + focusTime + " restTime: " + restTime);
+    //update report elements
+    $reportElements.focusTimeText.text(`${Math.ceil(focusTime / MIN)} min`);
+    $reportElements.restTimeText.text(`${Math.ceil(restTime / MIN)} min`);
 })
 
 
@@ -592,3 +643,80 @@ class CountDown extends StopWatch {
 }
 
 
+//helper class for creating, parsing, and displaying reports
+class Report {
+    constructor(events = [],localStorageKey = "report",__primary = true) {
+        this.__primary = __primary;; 
+        this._events = events
+        this._key = localStorageKey
+    }
+    addEvent(type, time = Date.now(), data = {}) {
+        this._events.push(new ReportEvent(type, time, data))
+        log(l.REPORT, "added event: " + type + " at " + time)
+        if (this.__primary){
+            this.saveReport()
+        }
+    }
+    ofType(...types) {
+        return new Report(this._events.filter(e => types.includes(e.type)), this._key,false)
+    }
+    between(start, end) {
+        return new Report(this._events.filter(e => e.time >= start && e.time <= end), this._key,false)
+    }
+    getDurationPairs() {
+        //returns an array of durations for each pair of events (Start and End)
+        let durations = []
+        for (let i = 0; i < this._events.length; i++) {
+            log(l.REPORT, "event type: " + this._events[i].type)
+            if (events.STOP.includes(this._events[i].type)) {
+                log(l.REPORT, "found stop event")
+                durations.push({
+                    start : this._events[i - 1] ,
+                    end :  this._events[i] ,
+                    duration : this._events[i].time - this._events[i - 1].time})
+            }
+
+        }
+        return durations;
+    }
+    getDurationHTML(){
+        var durations = this.getDurationPairs()
+        var html = ""
+        for(var i = 0; i < durations.length; i++){
+            html += `<div>${durations[i].start.type} - ${durations[i].end.type} : ${durations[i].duration}</div>`
+        }
+        return html
+    }
+    totalDuration(){
+        var durations = this.getDurationPairs()
+        var total = 0
+        for(var i = 0; i < durations.length; i++){
+            total += durations[i].duration
+        }
+        return total
+    }
+    loadReport(){
+        var report = JSON.parse(localStorage.getItem(this._key))
+        log(l.REPORT, "loaded report: " + report)
+        if (report){
+            this._events = report._events
+            log(l.REPORT, "loaded events: " + this._events)
+        }
+    }
+    saveReport(){
+        localStorage.setItem(this._key, JSON.stringify(this))
+        log(l.REPORT, "saved report: ", this)
+    }
+}
+
+class ReportEvent {
+    constructor(type, time, data) {
+        this.type = type
+        this.time = time
+        this.data = data
+        this._timestamp = new Date(this.time).toLocaleString();
+    }
+
+}
+
+var report = new Report([],"report");
