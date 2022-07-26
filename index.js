@@ -2,7 +2,6 @@
 const SEC = 1000;
 const MIN = 60 * SEC;
 const HOUR = 60 * MIN;
-const SPEED = 1;
 const REFRESH_RATE = 100;
 const FOCUS_COLOUR = "#F26157"
 const REST_COLOUR = "#64B6AC"
@@ -13,7 +12,7 @@ const BG_COLOURS = {
     "neutral": NEUTRAL_COLOUR
 }
 
-//event -> type, time,data
+//event -> type, time, data
 const events = {
     START_FOCUS: "start_focus",
     STOP_FOCUS: "stop_focus",
@@ -172,7 +171,7 @@ function startFocus() {
     report.addEvent(events.START_FOCUS, new Date(), {task: tasks[selectedTask]});
     changeState("focus");
     $bigButton.text("Rest");
-    stopWatch = new StopWatch(SPEED, REFRESH_RATE,
+    stopWatch = new StopWatch(REFRESH_RATE,
         (that) => {
             displayTime(that);
             updateTitle(that);
@@ -193,14 +192,14 @@ function startRest() {
     changeState("rest");
     $bigButton.text("Skip");
     stopWatch.stop();
-    countDown = new CountDown(rest.restTime, 1, REFRESH_RATE,
+    countDown = new CountDown(rest.restTime, REFRESH_RATE,
         (that) => { //onUpdate
             displayTime(that);
             updateTitle(that);
         },
         () => { //OnFinish\
             playSound(sounds.RING);
-            report.addEvent(events.END_BREAK, new Date(), {task: tasks[selectedTask]});
+            report.addEvent(events.STOP_BREAK, new Date(), {task: tasks[selectedTask]});
             if (settings.autostartFocus) {
                 changeState("focus");
                 startFocus();
@@ -372,6 +371,7 @@ function loadSettings() {
     if (settings.dev) {
         cheats.log = settings.devOptions.log;
         cheats.logFilter = settings.devOptions.logFilter;
+        Date.showUi()
     }
 }
 
@@ -498,14 +498,14 @@ $reportButton.click(() => {
 // helper class for stopwatch 
 // technically a FSM
 class StopWatch {
-    constructor(speed = 1, updateDelay = 200, onUpdateCallback = () => { }) {
+    constructor( updateDelay = 200, onUpdateCallback = () => { }) {
         this._time = 0 //# of milliseconds on stopwatch
         this._referenceDate; //PRIVATE date at which stopwatch STARTS 
         this._state = "stopped" // "stopped" - "running" - "paused"
         this._updateInterval; //interval object for starting and stopping stopwatch
         this._updateDelay = updateDelay; //set delay for updating stopwatch
         this._onUpdateCallback = onUpdateCallback; //custom callback function for stopwatch updates
-        this._speed = speed; //used to speed up stopwatch for debugging
+        
     }
     // start stopwatch from 00:00:00 
     // transition : "stopped" -> "paused"
@@ -593,14 +593,14 @@ class StopWatch {
         this._referenceDate = Date.now();
     }
     _advance() {
-        this._time = (Date.now() - this._referenceDate) * this._speed;
+        this._time = (Date.now() - this._referenceDate);
         this._onUpdateCallback(this) //invoke custom callback, passing stopwatch object as argument
         log(l.TIMER, this._time);
     }
 }
 class CountDown extends StopWatch {
-    constructor(duration, speed = 1, updateDelay = 200, onUpdateCallback = () => { }, onFinishedCallback = () => { }) {
-        super(speed, updateDelay, onUpdateCallback);
+    constructor(duration, updateDelay = 200, onUpdateCallback = () => { }, onFinishedCallback = () => { }) {
+        super(updateDelay, onUpdateCallback);
         this._referenceDate = Date.now() + duration; //Date at which countdown ENDS
         this._time = duration; //time REMAINING in countdown
         this._duration = duration;
@@ -712,7 +712,7 @@ class Report {
 class ReportEvent {
     constructor(type, time, data) {
         this.type = type
-        this.time = time
+        this.time = time  - 0 //TODO : surely a better way to do this
         this.data = data
         this._timestamp = new Date(this.time).toLocaleString();
     }
