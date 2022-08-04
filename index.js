@@ -215,6 +215,7 @@ function startNeutral() {
     changeState("neutral");
     $bigButton.text("Start");
     countDown.stop()
+    $timeDisplay.text("00:00");
     updateTitle();
 }
 $bigButton.click(function () {
@@ -450,8 +451,19 @@ $purgeLocalStorageButton.click(() => {
     localStorage.clear();
     location.reload();
 })
-$optionsTitle = $("#optionsModalTitle");
+$purgeTasksButton = $("#purgeTasksButton");
+$purgeTasksButton.click(() => {
+    localStorage.removeItem("tasks");
+    location.reload();
+})
+$purgeReportButton = $("#purgeReportButton");
+$purgeReportButton.click(() => {
+    localStorage.removeItem("report");
+    location.reload();
+})
+
 var timesClicked = 0;
+$optionsTitle = $("#optionsModalTitle");
 $optionsTitle.click(() => {
     log(l.SETTINGS, "clicked options title");
     if (settings.dev) {

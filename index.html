@@ -18,7 +18,7 @@
    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
    <link rel="manifest" href="/site.webmanifest">
-   
+
 </head>
 
 <body class="bg-neutral font-primary" id="body">
@@ -93,6 +93,11 @@
                   <div class="dropdown-divider"></div>
                   <button class="btn btn-light text-danger shadow" id="purgeLocalStorageButton">purge
                      localStorage</button>
+                  <button class="btn btn-light text-danger shadow" id="purgeTasksButton">purge
+                     Tasks</button>
+                  <button class="btn btn-light text-danger shadow" id="purgeReportButton">purge
+                     Report</button>
+                  
                </div>
             </div>
             <div class="modal-footer">
@@ -116,18 +121,18 @@
                </button>
             </div>
             <span class="modal-body ">
-               <div class = "reportBox rounded-0 bg-light">
-                  <i class="fas fa-clock fa-lg fa-fw"></i> Focused for <span id = "reportFocusTime">00:00</span>
+               <div class="reportBox rounded-0 bg-light">
+                  <i class="fas fa-clock fa-lg fa-fw"></i> Focused for <span id="reportFocusTime">00:00</span>
                </div>
             </span>
             <span class="modal-body ">
-               <div class = "reportBox rounded-0 bg-light">
-                  <i class="fas fa-clock fa-lg fa-fw" ></i> Rested for <span id="reportRestTime">00:00</span>
+               <div class="reportBox rounded-0 bg-light">
+                  <i class="fas fa-clock fa-lg fa-fw"></i> Rested for <span id="reportRestTime">00:00</span>
                </div>
             </span>
             <div class="modal-footer">
                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-               
+
             </div>
          </div>
       </div>
@@ -138,8 +143,8 @@
       <a href="/index.html" class="font-weight-bold font-primary text-lg-left" id="navTitle"><i
             class="fas fa-clock fa-sm fa-fw"></i> FlowTime</a>
       <span class=" float-right" id="navButtons">
-         <button id = "navbarReportButton" class="btn-light rounded  navbar-button" data-toggle="modal"
-         data-target="#reportModal"><i class="fas fa-chart-line fa-lg fa-fw"></i>
+         <button id="navbarReportButton" class="btn-light rounded  navbar-button" data-toggle="modal"
+            data-target="#reportModal"><i class="fas fa-chart-line fa-lg fa-fw"></i>
             Report</button>
          <button id="navbarOptionsButton" class="btn-light rounded  navbar-button" data-toggle="modal"
             data-target="#optionsModal"><i class="fa fa-cog m-0 " aria-hidden="true"></i>
@@ -155,7 +160,7 @@
    <!--timer-->
    <div class="container mt-3 w-main" id="timerBox">
 
-      <span class = "p-0" id = "closeButton"><i class="fas fa-circle fa-sm fa-fw"></i></span>
+      <span class="p-0" id="closeButton"><i class="fas fa-circle fa-sm fa-fw"></i></span>
       <div class="row d-flex justify-content-center align-content-center  ">
          <h1 class="display-1 font-weight-bold m-5 unselectable " id="time">00:00</h1>
       </div>
